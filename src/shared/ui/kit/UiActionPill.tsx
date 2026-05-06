@@ -29,7 +29,7 @@ export const UiActionPill = ({
   return (
     <View style={[styles.root, { backgroundColor }]}>
       <View style={styles.iconSlot}>
-        <Ionicons size={15} name={iconName} color={iconColor} />
+        <Ionicons size={16} name={iconName} color={iconColor} />
       </View>
       <Text style={[styles.count, { color: iconColor }]}>{count}</Text>
     </View>
@@ -40,11 +40,13 @@ const styles = StyleSheet.create({
   root: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: spacing.xs,
     borderRadius: radius.pill,
+    minWidth: 63,
+    minHeight: 36,
     paddingVertical: 6,
     paddingHorizontal: 12,
-    paddingLeft: 6,
   },
   iconSlot: {
     width: 16,
@@ -53,6 +55,5 @@ const styles = StyleSheet.create({
   },
   count: {
     ...typography.badgeBold,
-    minWidth: 26,
   },
 });
