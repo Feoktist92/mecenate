@@ -10,15 +10,27 @@ type UiActionPillProps = {
   active?: boolean;
 };
 
-export const UiActionPill = ({ type, count, active = false }: UiActionPillProps) => {
+export const UiActionPill = ({
+  type,
+  count,
+  active = false,
+}: UiActionPillProps) => {
   const isLike = type === 'like';
-  const iconName = isLike ? (active ? 'heart' : 'heart-outline') : 'chatbubble-outline';
+  const iconName = isLike
+    ? active
+      ? 'heart'
+      : 'heart-outline'
+    : 'chatbubble-outline';
   const iconColor = active ? colors.likeActiveText : colors.textSecondary;
-  const backgroundColor = active ? colors.likeActiveBackground : colors.actionSurface;
+  const backgroundColor = active
+    ? colors.likeActiveBackground
+    : colors.actionSurface;
 
   return (
     <View style={[styles.root, { backgroundColor }]}>
-      <Ionicons size={15} name={iconName} color={iconColor} />
+      <View style={styles.iconSlot}>
+        <Ionicons size={15} name={iconName} color={iconColor} />
+      </View>
       <Text style={[styles.count, { color: iconColor }]}>{count}</Text>
     </View>
   );
@@ -34,7 +46,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingLeft: 6,
   },
+  iconSlot: {
+    width: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   count: {
-    ...typography.badge,
+    ...typography.badgeBold,
+    minWidth: 26,
   },
 });

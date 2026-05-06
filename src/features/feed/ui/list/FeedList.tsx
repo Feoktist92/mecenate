@@ -1,162 +1,72 @@
-import { useLocalObservable } from "mobx-react-lite";
-import React from "react";
-import {
-  ActivityIndicator,
-  FlatList,
-  RefreshControl,
-  StyleSheet,
-  View,
-} from "react-native";
+import { StyleSheet, View } from 'react-native';
 
-import { PostDto } from "@/entities/post/types";
-import { createFeedUiStore } from "@/features/feed/model/feedUiStore";
-import { useFeedInfiniteQuery } from "@/features/feed/model/useFeedInfiniteQuery";
-import { FeedPostCard } from "@/features/feed/ui/post/FeedPostCard";
-import { colors, spacing } from "@/shared/theme/tokens";
+import { useFeedScreen } from '@/features/feed/model/screen/useFeedScreen';
+import { colors } from '@/shared/theme/tokens';
+import { UiStateView } from '@/shared/ui/kit/UiStateView';
 
-import { FeedErrorState } from "./FeedErrorState";
-import { FeedPostListSkeleton } from "./FeedPostListSkeleton";
-
-const FeedPostListSeparator = () => <View style={styles.separator} />;
-const extractPostKey = (item: PostDto) => item.id;
-
-type FeedScreenState = "loading" | "error" | "empty" | "content";
-
-const getFeedScreenState = ({
-  hasPosts,
-  isPending,
-  isFetching,
-  isError,
-}: {
-  hasPosts: boolean;
-  isPending: boolean;
-  isFetching: boolean;
-  isError: boolean;
-}): FeedScreenState => {
-  if (!hasPosts && (isPending || isFetching)) {
-    return "loading";
-  }
-
-  if (!hasPosts && isError) {
-    return "error";
-  }
-
-  if (!hasPosts && !isError && !isPending && !isFetching) {
-    return "empty";
-  }
-
-  return "content";
-};
+import { FeedFilterTabs } from './FeedFilterTabs';
+import { FeedPostList } from './FeedPostList';
+import { FeedPostListSkeleton } from './FeedPostListSkeleton';
 
 export const FeedList = () => {
-  const store = useLocalObservable(createFeedUiStore);
   const {
+    activeFilter,
     posts,
-    isPending,
-    isFetching,
-    isError,
-    hasNextPage,
+    screenState,
+    store,
     isFetchingNextPage,
-    isRefetching,
-    fetchNextPage,
-    refetch,
-  } = useFeedInfiniteQuery();
-
-  const hasPosts = posts.length > 0;
-  const canLoadNextPage =
-    Boolean(hasNextPage) && !isFetching && !isRefetching && !isFetchingNextPage;
-  const isRefreshing = isRefetching && !isFetchingNextPage;
-
-  const handleRefresh = React.useCallback(() => {
-    void refetch();
-  }, [refetch]);
-
-  const handleEndReached = React.useCallback(() => {
-    if (!canLoadNextPage) {
-      return;
-    }
-
-    void fetchNextPage();
-  }, [canLoadNextPage, fetchNextPage]);
-
-  const renderPostItem = React.useCallback(
-    ({ item }: { item: PostDto }) => <FeedPostCard post={item} store={store} />,
-    [store]
-  );
-
-  const screenState = getFeedScreenState({
-    hasPosts,
-    isPending,
-    isFetching,
-    isError,
-  });
-
-  if (screenState === "loading") {
-    return <FeedPostListSkeleton />;
-  }
-
-  if (screenState === "error") {
-    return <FeedErrorState onRetry={handleRefresh} />;
-  }
-
-  if (screenState === "empty") {
-    return (
-      <FeedErrorState
-        onRetry={handleRefresh}
-        message="По вашему запросу ничего не найдено"
-        buttonLabel="Обновить"
-      />
-    );
-  }
+    isRefreshing,
+    setActiveFilter,
+    handleEndReached,
+    handlePostPress,
+    handleRefresh,
+  } = useFeedScreen();
 
   return (
-    <FlatList
-      testID="feed-post-list"
-      data={posts}
-      keyExtractor={extractPostKey}
-      renderItem={renderPostItem}
-      contentContainerStyle={styles.content}
-      style={styles.list}
-      ItemSeparatorComponent={FeedPostListSeparator}
-      onEndReachedThreshold={0.4}
-      onEndReached={handleEndReached}
-      removeClippedSubviews
-      initialNumToRender={6}
-      maxToRenderPerBatch={8}
-      windowSize={7}
-      updateCellsBatchingPeriod={50}
-      refreshControl={
-        <RefreshControl
-          refreshing={isRefreshing}
-          onRefresh={handleRefresh}
-          tintColor={colors.accent}
+    <View style={styles.screen}>
+      <FeedFilterTabs value={activeFilter} onChange={setActiveFilter} />
+
+      {screenState === 'loading' ? <FeedPostListSkeleton /> : null}
+
+      {screenState === 'error' ? (
+        <UiStateView
+          variant='panel'
+          title='Не удалось загрузить публикации'
+          titleVariant='title'
+          showErrorIcon
+          onRetry={handleRefresh}
         />
-      }
-      ListFooterComponent={
-        <View style={styles.footer}>
-          {isFetchingNextPage ? (
-            <ActivityIndicator color={colors.accent} />
-          ) : null}
-        </View>
-      }
-    />
+      ) : null}
+
+      {screenState === 'empty' ? (
+        <UiStateView
+          variant='panel'
+          title='По вашему запросу ничего не найдено'
+          titleVariant='title'
+          retryLabel='Обновить'
+          showErrorIcon
+          onRetry={handleRefresh}
+        />
+      ) : null}
+
+      {screenState === 'content' ? (
+        <FeedPostList
+          posts={posts}
+          store={store}
+          isRefreshing={isRefreshing}
+          isFetchingNextPage={isFetchingNextPage}
+          onRefresh={handleRefresh}
+          onEndReached={handleEndReached}
+          onPostPress={handlePostPress}
+        />
+      ) : null}
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  list: {
+  screen: {
     flex: 1,
     backgroundColor: colors.screenBackground,
-  },
-  content: {
-    paddingTop: spacing.sm,
-  },
-  separator: {
-    height: spacing.sm,
-  },
-  footer: {
-    minHeight: 44,
-    alignItems: "center",
-    justifyContent: "center",
   },
 });

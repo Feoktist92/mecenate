@@ -1,16 +1,16 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { FeedPostSkeletonCard } from '@/features/feed/ui/post/FeedPostSkeletonCard';
+import { PostSkeletonCard } from '@/entities/post/ui/PostSkeletonCard';
 import { spacing } from '@/shared/theme/tokens';
 
 export const FeedPostListSkeleton = () => (
-  <View style={styles.content} testID="feed-list-skeleton">
-    <FeedPostSkeletonCard />
+  <View style={styles.content} testID='feed-list-skeleton'>
+    <PostSkeletonCard />
     <View style={styles.separator} />
-    <FeedPostSkeletonCard />
+    <PostSkeletonCard />
     <View style={styles.separator} />
-    <FeedPostSkeletonCard />
+    <PostSkeletonCard />
   </View>
 );
 

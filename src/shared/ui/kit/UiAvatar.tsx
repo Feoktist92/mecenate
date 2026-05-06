@@ -46,7 +46,9 @@ export const UiAvatar = ({
       style={[styles.avatarBase, avatarSizeStyle, styles.avatarFallback]}
       testID={`${testIDPrefix}-fallback`}
     >
-      <Text style={styles.avatarFallbackText}>{getAvatarInitial(displayName)}</Text>
+      <Text style={styles.avatarFallbackText}>
+        {getAvatarInitial(displayName)}
+      </Text>
     </View>
   );
 };

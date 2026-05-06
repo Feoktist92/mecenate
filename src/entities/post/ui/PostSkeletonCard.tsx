@@ -5,7 +5,7 @@ import { spacing } from '@/shared/theme/tokens';
 import { UiCard } from '@/shared/ui/kit/UiCard';
 import { UiSkeletonBlock } from '@/shared/ui/kit/UiSkeletonBlock';
 
-export const FeedPostSkeletonCard = () => (
+export const PostSkeletonCard = () => (
   <UiCard style={styles.card}>
     <View style={styles.header}>
       <UiSkeletonBlock style={styles.avatar} />

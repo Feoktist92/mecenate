@@ -1,4 +1,6 @@
 import {
+  buildFeedQueryKey,
+  FEED_FILTER_ALL,
   flattenFeedPages,
   getNextFeedPageParam,
   type FeedPage,
@@ -60,5 +62,13 @@ describe('useFeedInfiniteQuery helpers', () => {
       'post_3',
     ]);
   });
-});
 
+  it('builds stable query key for all tiers', () => {
+    expect(buildFeedQueryKey(undefined)).toEqual([
+      'feed-posts',
+      FEED_FILTER_ALL,
+    ]);
+    expect(buildFeedQueryKey('free')).toEqual(['feed-posts', 'free']);
+    expect(buildFeedQueryKey('paid')).toEqual(['feed-posts', 'paid']);
+  });
+});
