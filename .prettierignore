@@ -1,0 +1,11 @@
+node_modules/
+.expo/
+dist/
+web-build/
+coverage/
+.serena/
+.worktrees/
+ios/
+android/
+expo-env.d.ts
+*.tsbuildinfo

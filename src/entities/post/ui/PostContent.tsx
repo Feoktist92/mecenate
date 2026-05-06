@@ -7,24 +7,34 @@ import {
 } from '@/entities/post/lib/postPreview';
 import { colors, spacing, typography } from '@/shared/theme/tokens';
 
-type FeedPostContentProps = {
-  variant: 'free' | 'paid';
+type PostContentProps = {
+  isLocked?: boolean;
   title: string;
-  previewText: string;
-  isExpanded: boolean;
-  onToggleExpand: () => void;
+  text: string;
+  mode: PostContentMode;
+  bodyTone?: PostContentBodyTone;
 };
 
-export const FeedPostContent = ({
-  variant,
-  title,
-  previewText,
-  isExpanded,
-  onToggleExpand,
-}: FeedPostContentProps) => {
-  const isPaid = variant === 'paid';
+type PostContentMode =
+  | {
+      type: 'preview';
+      isExpanded: boolean;
+      onToggleExpand: () => void;
+    }
+  | {
+      type: 'full';
+    };
 
-  if (isPaid) {
+type PostContentBodyTone = 'primary' | 'secondary';
+
+export const PostContent = ({
+  isLocked = false,
+  title,
+  text,
+  mode,
+  bodyTone = 'primary',
+}: PostContentProps) => {
+  if (isLocked) {
     return (
       <View style={styles.paidSkeletonWrap}>
         <View style={styles.paidSkeletonTitle} />
@@ -33,16 +43,30 @@ export const FeedPostContent = ({
     );
   }
 
-  const isLongPreview = previewText.length > PREVIEW_MAX_LENGTH;
-  const displayPreview = isExpanded ? previewText : getCollapsedPreview(previewText);
+  const isPreview = mode.type === 'preview';
+  const isLongPreview = isPreview && text.length > PREVIEW_MAX_LENGTH;
+  const displayText =
+    isPreview && !mode.isExpanded ? getCollapsedPreview(text) : text;
 
   return (
     <>
       <Text style={styles.title}>{title}</Text>
       <View style={styles.previewBlock}>
-        <Text style={styles.preview}>{displayPreview}</Text>
+        <Text
+          style={[
+            styles.preview,
+            bodyTone === 'secondary'
+              ? styles.previewSecondary
+              : styles.previewPrimary,
+          ]}
+        >
+          {displayText}
+        </Text>
         {isLongPreview ? (
-          <Pressable onPress={onToggleExpand} style={styles.showMoreButton}>
+          <Pressable
+            onPress={mode.onToggleExpand}
+            style={styles.showMoreButton}
+          >
             <Text style={styles.showMore}>Показать еще</Text>
           </Pressable>
         ) : null}
@@ -65,7 +89,12 @@ const styles = StyleSheet.create({
   },
   preview: {
     ...typography.body,
+  },
+  previewPrimary: {
     color: colors.textPrimary,
+  },
+  previewSecondary: {
+    color: colors.textSecondary,
   },
   showMoreButton: {
     alignSelf: 'flex-start',

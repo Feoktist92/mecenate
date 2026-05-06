@@ -27,7 +27,7 @@ export const UiComment = ({
       </View>
     </View>
     <View style={styles.likes}>
-      <Ionicons name="heart-outline" size={14} color={colors.textSecondary} />
+      <Ionicons name='heart-outline' size={14} color={colors.textSecondary} />
       <Text style={styles.likesText}>{likesCount}</Text>
     </View>
   </View>
@@ -39,6 +39,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.xs,
   },
   left: {
     flexDirection: 'row',

@@ -1,10 +1,5 @@
 import React from 'react';
-import {
-  StyleSheet,
-  TextInput,
-  TextInputProps,
-  View,
-} from 'react-native';
+import { StyleSheet, TextInput, TextInputProps, View } from 'react-native';
 
 import { colors, radius, typography } from '@/shared/theme/tokens';
 
@@ -12,27 +7,28 @@ type UiInputTextProps = TextInputProps & {
   variant?: 'filled' | 'outline';
 };
 
-export const UiInputText = ({
-  variant = 'filled',
-  editable = true,
-  style,
-  ...props
-}: UiInputTextProps) => (
-  <View
-    style={[
-      styles.root,
-      variant === 'filled' ? styles.filled : styles.outline,
-      !editable && styles.disabled,
-    ]}
-  >
-    <TextInput
-      editable={editable}
-      style={[styles.input, style]}
-      placeholderTextColor={colors.textMuted}
-      {...props}
-    />
-  </View>
+export const UiInputText = React.forwardRef<TextInput, UiInputTextProps>(
+  ({ variant = 'filled', editable = true, style, ...props }, ref) => (
+    <View
+      style={[
+        styles.root,
+        variant === 'filled' ? styles.filled : styles.outline,
+        !editable && styles.disabled,
+      ]}
+    >
+      <TextInput
+        ref={ref}
+        editable={editable}
+        showSoftInputOnFocus
+        style={[styles.input, style]}
+        placeholderTextColor={colors.textMuted}
+        {...props}
+      />
+    </View>
+  )
 );
+
+UiInputText.displayName = 'UiInputText';
 
 const styles = StyleSheet.create({
   root: {
@@ -58,5 +54,6 @@ const styles = StyleSheet.create({
     ...typography.bodyBold,
     color: colors.textPrimary,
     paddingVertical: 0,
+    flex: 1,
   },
 });

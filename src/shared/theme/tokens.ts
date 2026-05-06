@@ -33,21 +33,31 @@ export const radius = {
 
 export const typography = {
   title: {
+    fontFamily: 'Manrope_700Bold',
     fontSize: 18,
     lineHeight: 26,
     fontWeight: '700' as const,
   },
   body: {
+    fontFamily: 'Manrope_500Medium',
     fontSize: 15,
     lineHeight: 20,
     fontWeight: '500' as const,
   },
   bodyBold: {
+    fontFamily: 'Manrope_700Bold',
     fontSize: 15,
     lineHeight: 20,
     fontWeight: '700' as const,
   },
   badge: {
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '500' as const,
+  },
+    badgeBold: {
+    fontFamily: 'Manrope_700Bold',
     fontSize: 13,
     lineHeight: 18,
     fontWeight: '700' as const,

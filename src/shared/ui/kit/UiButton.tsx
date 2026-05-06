@@ -42,7 +42,9 @@ export const UiButton = ({
       {loading ? (
         <ActivityIndicator color={colors.paidText} />
       ) : (
-        <Text style={[styles.label, isDisabled && styles.labelDisabled]}>{label}</Text>
+        <Text style={[styles.label, isDisabled && styles.labelDisabled]}>
+          {label}
+        </Text>
       )}
     </Pressable>
   );
