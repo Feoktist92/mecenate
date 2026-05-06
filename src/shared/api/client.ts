@@ -1,6 +1,7 @@
 import { env } from '@/shared/config/env';
 
 type QueryValue = string | number | boolean | null | undefined;
+type RequestBody = Record<string, unknown> | undefined;
 
 type ApiErrorPayload = {
   ok?: boolean;
@@ -38,16 +39,24 @@ const buildUrl = (path: string, query?: Record<string, QueryValue>): string => {
   return url.toString();
 };
 
-export const apiGet = async <T>(
-  path: string,
-  query?: Record<string, QueryValue>
-): Promise<T> => {
+const apiRequest = async <T>({
+  method,
+  path,
+  query,
+  body,
+}: {
+  method: 'GET' | 'POST';
+  path: string;
+  query?: Record<string, QueryValue>;
+  body?: RequestBody;
+}): Promise<T> => {
   const response = await fetch(buildUrl(path, query), {
-    method: 'GET',
+    method,
     headers: {
       Authorization: `Bearer ${env.API_TOKEN}`,
       'Content-Type': 'application/json',
     },
+    body: body === undefined ? undefined : JSON.stringify(body),
   });
 
   const payload = (await response.json()) as T & ApiErrorPayload;
@@ -63,3 +72,23 @@ export const apiGet = async <T>(
   return payload;
 };
 
+export const apiGet = async <T>(
+  path: string,
+  query?: Record<string, QueryValue>
+): Promise<T> => {
+  return apiRequest<T>({
+    method: 'GET',
+    path,
+    query,
+  });
+};
+
+export const apiPost = async <T>(
+  path: string,
+  body?: RequestBody
+): Promise<T> =>
+  apiRequest<T>({
+    method: 'POST',
+    path,
+    body,
+  });

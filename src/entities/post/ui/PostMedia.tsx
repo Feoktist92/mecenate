@@ -3,34 +3,38 @@ import { Image, Platform, StyleSheet, View } from 'react-native';
 
 import { colors } from '@/shared/theme/tokens';
 
-import { PaidOverlay } from './PaidOverlay';
+import { PostPaidOverlay } from './PostPaidOverlay';
 
-type FeedPostMediaProps = {
-  variant: 'free' | 'paid';
+type PostMediaProps = {
   coverUrl: string;
-  onError: () => void;
+  isLocked?: boolean;
+  onError?: () => void;
 };
 
-export const FeedPostMedia = ({ variant, coverUrl, onError }: FeedPostMediaProps) => {
+export const PostMedia = ({
+  coverUrl,
+  isLocked = false,
+  onError,
+}: PostMediaProps) => {
   const [coverLoaded, setCoverLoaded] = React.useState(false);
 
   React.useEffect(() => {
     setCoverLoaded(false);
-  }, [coverUrl, variant]);
-
-  const isPaid = variant === 'paid';
+  }, [coverUrl, isLocked]);
 
   return (
     <View style={styles.mediaWrapper}>
       <Image
         source={{ uri: coverUrl }}
         style={styles.cover}
-        testID="post-cover"
-        blurRadius={isPaid && Platform.OS === 'android' ? 40 : 0}
+        testID='post-cover'
+        blurRadius={isLocked && Platform.OS === 'android' ? 40 : 0}
         onLoad={() => setCoverLoaded(true)}
         onError={onError}
       />
-      {isPaid ? <PaidOverlay enableBlur={coverLoaded && Platform.OS === 'ios'} /> : null}
+      {isLocked ? (
+        <PostPaidOverlay enableBlur={coverLoaded && Platform.OS === 'ios'} />
+      ) : null}
     </View>
   );
 };

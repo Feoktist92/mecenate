@@ -3,24 +3,24 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { colors, spacing, typography } from '@/shared/theme/tokens';
-import { UiPrimaryButton } from '@/shared/ui/kit/UiPrimaryButton';
+import { UiButton } from '@/shared/ui/kit/UiButton';
 
-type PaidOverlayProps = {
+type PostPaidOverlayProps = {
   enableBlur: boolean;
 };
 
-export const PaidOverlay = ({ enableBlur }: PaidOverlayProps) => (
+export const PostPaidOverlay = ({ enableBlur }: PostPaidOverlayProps) => (
   <View style={styles.root}>
     {enableBlur ? (
       <BlurView
         intensity={40}
-        tint="dark"
-        experimentalBlurMethod="dimezisBlurView"
+        tint='dark'
+        experimentalBlurMethod='dimezisBlurView'
         style={StyleSheet.absoluteFill}
-        testID="paid-blur"
+        testID='paid-blur'
       />
     ) : (
-      <View style={StyleSheet.absoluteFill} testID="paid-blur" />
+      <View style={StyleSheet.absoluteFill} testID='paid-blur' />
     )}
     <View style={styles.dimLayer} />
     <View style={styles.iconShell}>
@@ -32,7 +32,7 @@ export const PaidOverlay = ({ enableBlur }: PaidOverlayProps) => (
       <Text style={styles.messageLine}>Контент скрыт пользователем.</Text>
       <Text style={styles.messageLine}>Доступ откроется после доната</Text>
     </View>
-    <UiPrimaryButton label="Отправить донат" style={styles.button} />
+    <UiButton label='Отправить донат' style={styles.button} />
   </View>
 );
 

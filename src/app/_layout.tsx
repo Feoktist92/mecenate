@@ -7,9 +7,17 @@ export default function RootLayout() {
   return (
     <AppProviders>
       <Stack>
-        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name='index' options={{ headerShown: false }} />
+        <Stack.Screen
+          name='post/[postId]'
+          options={{
+            headerShown: false,
+            gestureEnabled: true,
+            fullScreenGestureEnabled: true,
+          }}
+        />
       </Stack>
-      <StatusBar style="dark" />
+      <StatusBar style='dark' />
     </AppProviders>
   );
 }

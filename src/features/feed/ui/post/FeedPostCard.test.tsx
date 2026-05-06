@@ -2,9 +2,9 @@ import { fireEvent, render } from '@testing-library/react-native';
 import React from 'react';
 import { Platform } from 'react-native';
 
-import { createFeedUiStore } from '@/features/feed/model/feedUiStore';
-import { FeedErrorState } from '@/features/feed/ui/list/FeedErrorState';
+import { createFeedUiStore } from '@/features/feed/model/store/feedUiStore';
 import { FeedPostCard } from '@/features/feed/ui/post/FeedPostCard';
+import { UiStateView } from '@/shared/ui/kit/UiStateView';
 
 describe('Feed UI', () => {
   it('renders preview text for free post', () => {
@@ -29,7 +29,9 @@ describe('Feed UI', () => {
       createdAt: '2026-04-14T10:00:00.000Z',
     };
 
-    const { getByText, queryByText } = render(<FeedPostCard post={post} store={store} />);
+    const { getByText, queryByText } = render(
+      <FeedPostCard post={post} store={store} />
+    );
 
     expect(getByText('Подготовка к лету')).toBeTruthy();
     expect(getByText('Когда вы начинаете бегать по утрам...')).toBeTruthy();
@@ -58,20 +60,32 @@ describe('Feed UI', () => {
       createdAt: '2026-04-14T10:00:00.000Z',
     };
 
-    const { getByText, queryByText, getByTestId } = render(<FeedPostCard post={post} store={store} />);
+    const { getByText, queryByText, getByTestId } = render(
+      <FeedPostCard post={post} store={store} />
+    );
 
     expect(getByText('Контент скрыт пользователем.')).toBeTruthy();
     expect(getByText('Доступ откроется после доната')).toBeTruthy();
     expect(getByText('Отправить донат')).toBeTruthy();
     expect(getByTestId('paid-blur')).toBeTruthy();
-    expect(getByTestId('post-cover').props.blurRadius).toBe(Platform.OS === 'android' ? 40 : 0);
+    expect(getByTestId('post-cover').props.blurRadius).toBe(
+      Platform.OS === 'android' ? 40 : 0
+    );
     expect(queryByText('Эксклюзив')).toBeNull();
     expect(queryByText('Когда вы начинаете бегать по утрам...')).toBeNull();
   });
 
   it('renders error state and calls retry handler', () => {
     const onRetry = jest.fn();
-    const { getByText } = render(<FeedErrorState onRetry={onRetry} />);
+    const { getByText } = render(
+      <UiStateView
+        variant='panel'
+        title='Не удалось загрузить публикации'
+        titleVariant='title'
+        showErrorIcon
+        onRetry={onRetry}
+      />
+    );
 
     fireEvent.press(getByText('Повторить'));
 
@@ -128,7 +142,9 @@ describe('Feed UI', () => {
       createdAt: '2026-04-14T10:00:00.000Z',
     };
 
-    const { getByTestId, queryByTestId } = render(<FeedPostCard post={post} store={store} />);
+    const { getByTestId, queryByTestId } = render(
+      <FeedPostCard post={post} store={store} />
+    );
 
     expect(getByTestId('avatar-image')).toBeTruthy();
 
@@ -157,7 +173,9 @@ describe('Feed UI', () => {
       createdAt: '2026-04-14T10:00:00.000Z',
     };
 
-    const { getByTestId, getByText, queryByText } = render(<FeedPostCard post={post} store={store} />);
+    const { getByTestId, getByText, queryByText } = render(
+      <FeedPostCard post={post} store={store} />
+    );
 
     fireEvent(getByTestId('post-cover'), 'error');
 

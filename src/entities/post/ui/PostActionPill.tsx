@@ -12,4 +12,6 @@ export const PostActionPill = ({
   type,
   count,
   active = false,
-}: PostActionPillProps) => <UiActionPill type={type} count={count} active={active} />;
+}: PostActionPillProps) => (
+  <UiActionPill type={type} count={count} active={active} />
+);

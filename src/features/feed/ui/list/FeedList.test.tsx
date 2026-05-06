@@ -1,18 +1,27 @@
-import { act, render } from '@testing-library/react-native';
+import { act, fireEvent, render } from '@testing-library/react-native';
 import React from 'react';
 
 import { PostDto } from '@/entities/post/types';
-import { useFeedInfiniteQuery } from '@/features/feed/model/useFeedInfiniteQuery';
+import { useFeedInfiniteQuery } from '@/features/feed/model/query/useFeedInfiniteQuery';
 
 import { FeedList } from './FeedList';
 
-jest.mock('@/features/feed/model/useFeedInfiniteQuery', () => ({
+jest.mock('@/features/feed/model/query/useFeedInfiniteQuery', () => ({
   useFeedInfiniteQuery: jest.fn(),
+}));
+
+const mockedPush = jest.fn();
+
+jest.mock('expo-router', () => ({
+  useRouter: () => ({
+    push: mockedPush,
+  }),
 }));
 
 const mockedUseFeedInfiniteQuery = useFeedInfiniteQuery as jest.MockedFunction<
   typeof useFeedInfiniteQuery
 >;
+const originalConsoleError = console.error;
 
 const createBaseQueryState = () => ({
   posts: [] as PostDto[],
@@ -26,7 +35,16 @@ const createBaseQueryState = () => ({
   refetch: jest.fn(),
 });
 
-const createPost = (): PostDto => ({
+const createDeferred = () => {
+  let resolve!: () => void;
+  const promise = new Promise<void>((promiseResolve) => {
+    resolve = promiseResolve;
+  });
+
+  return { promise, resolve };
+};
+
+const createPost = (overrides: Partial<PostDto> = {}): PostDto => ({
   id: 'post_1',
   title: 'Пост',
   preview: 'Превью',
@@ -43,9 +61,29 @@ const createPost = (): PostDto => ({
     displayName: 'Автор',
     avatarUrl: null,
   },
+  ...overrides,
 });
 
 describe('FeedList', () => {
+  beforeAll(() => {
+    jest.spyOn(console, 'error').mockImplementation((...args: unknown[]) => {
+      if (
+        typeof args[0] === 'string' &&
+        args[0].includes(
+          'Each child in a list should have a unique "key" prop.'
+        )
+      ) {
+        return;
+      }
+
+      originalConsoleError(...(args as Parameters<typeof console.error>));
+    });
+  });
+
+  afterAll(() => {
+    (console.error as jest.Mock).mockRestore();
+  });
+
   afterEach(() => {
     jest.clearAllMocks();
   });
@@ -55,7 +93,7 @@ describe('FeedList', () => {
       ...createBaseQueryState(),
       isPending: true,
       isFetching: true,
-    } as ReturnType<typeof useFeedInfiniteQuery>);
+    } as unknown as ReturnType<typeof useFeedInfiniteQuery>);
 
     const { getByTestId } = render(<FeedList />);
 
@@ -66,7 +104,7 @@ describe('FeedList', () => {
     mockedUseFeedInfiniteQuery.mockReturnValue({
       ...createBaseQueryState(),
       isError: true,
-    } as ReturnType<typeof useFeedInfiniteQuery>);
+    } as unknown as ReturnType<typeof useFeedInfiniteQuery>);
 
     const { getByText } = render(<FeedList />);
 
@@ -78,7 +116,7 @@ describe('FeedList', () => {
     mockedUseFeedInfiniteQuery.mockReturnValue({
       ...createBaseQueryState(),
       posts: [createPost()],
-    } as ReturnType<typeof useFeedInfiniteQuery>);
+    } as unknown as ReturnType<typeof useFeedInfiniteQuery>);
 
     const { getByTestId } = render(<FeedList />);
 
@@ -91,7 +129,7 @@ describe('FeedList', () => {
       isPending: false,
       isFetching: false,
       isError: false,
-    } as ReturnType<typeof useFeedInfiniteQuery>);
+    } as unknown as ReturnType<typeof useFeedInfiniteQuery>);
 
     const { getByText } = render(<FeedList />);
 
@@ -99,23 +137,71 @@ describe('FeedList', () => {
     expect(getByText('Обновить')).toBeTruthy();
   });
 
-  it('calls refetch on pull-to-refresh', () => {
-    const refetch = jest.fn();
+  it('calls refetch on pull-to-refresh', async () => {
+    const refetch = jest.fn(() => Promise.resolve());
 
     mockedUseFeedInfiniteQuery.mockReturnValue({
       ...createBaseQueryState(),
       posts: [createPost()],
       refetch,
-    } as ReturnType<typeof useFeedInfiniteQuery>);
+    } as unknown as ReturnType<typeof useFeedInfiniteQuery>);
 
     const { getByTestId } = render(<FeedList />);
     const list = getByTestId('feed-post-list');
 
-    act(() => {
+    await act(async () => {
       list.props.refreshControl.props.onRefresh();
+      await Promise.resolve();
     });
 
     expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not show pull-to-refresh spinner during background refetch', () => {
+    mockedUseFeedInfiniteQuery.mockReturnValue({
+      ...createBaseQueryState(),
+      posts: [createPost()],
+      isRefetching: true,
+    } as unknown as ReturnType<typeof useFeedInfiniteQuery>);
+
+    const { getByTestId } = render(<FeedList />);
+    const list = getByTestId('feed-post-list');
+
+    expect(list.props.refreshControl.props.refreshing).toBe(false);
+  });
+
+  it('shows pull-to-refresh spinner only while user refresh is pending', async () => {
+    const deferred = createDeferred();
+    const refetch = jest.fn(() => deferred.promise);
+
+    mockedUseFeedInfiniteQuery.mockReturnValue({
+      ...createBaseQueryState(),
+      posts: [createPost()],
+      refetch,
+    } as unknown as ReturnType<typeof useFeedInfiniteQuery>);
+
+    const { getByTestId } = render(<FeedList />);
+
+    expect(
+      getByTestId('feed-post-list').props.refreshControl.props.refreshing
+    ).toBe(false);
+
+    act(() => {
+      getByTestId('feed-post-list').props.refreshControl.props.onRefresh();
+    });
+
+    expect(
+      getByTestId('feed-post-list').props.refreshControl.props.refreshing
+    ).toBe(true);
+
+    await act(async () => {
+      deferred.resolve();
+      await deferred.promise;
+    });
+
+    expect(
+      getByTestId('feed-post-list').props.refreshControl.props.refreshing
+    ).toBe(false);
   });
 
   it('calls fetchNextPage when end reached and pagination is available', () => {
@@ -126,7 +212,7 @@ describe('FeedList', () => {
       posts: [createPost()],
       hasNextPage: true,
       fetchNextPage,
-    } as ReturnType<typeof useFeedInfiniteQuery>);
+    } as unknown as ReturnType<typeof useFeedInfiniteQuery>);
 
     const { getByTestId } = render(<FeedList />);
     const list = getByTestId('feed-post-list');
@@ -147,7 +233,7 @@ describe('FeedList', () => {
       hasNextPage: true,
       isRefetching: true,
       fetchNextPage,
-    } as ReturnType<typeof useFeedInfiniteQuery>);
+    } as unknown as ReturnType<typeof useFeedInfiniteQuery>);
 
     const { getByTestId } = render(<FeedList />);
     const list = getByTestId('feed-post-list');
@@ -157,5 +243,54 @@ describe('FeedList', () => {
     });
 
     expect(fetchNextPage).not.toHaveBeenCalled();
+  });
+
+  it('switches tier filter and refetches with selected tier query key', () => {
+    mockedUseFeedInfiniteQuery.mockReturnValue({
+      ...createBaseQueryState(),
+      posts: [createPost()],
+    } as unknown as ReturnType<typeof useFeedInfiniteQuery>);
+
+    const { getByText } = render(<FeedList />);
+
+    expect(mockedUseFeedInfiniteQuery).toHaveBeenLastCalledWith(undefined);
+
+    fireEvent.press(getByText('Платные'));
+
+    expect(mockedUseFeedInfiniteQuery).toHaveBeenLastCalledWith('paid');
+  });
+
+  it('navigates to post detail when free post card is tapped', () => {
+    mockedUseFeedInfiniteQuery.mockReturnValue({
+      ...createBaseQueryState(),
+      posts: [createPost()],
+    } as unknown as ReturnType<typeof useFeedInfiniteQuery>);
+
+    const { getByText } = render(<FeedList />);
+
+    fireEvent.press(getByText('Пост'));
+
+    expect(mockedPush).toHaveBeenCalledWith('/post/post_1');
+  });
+
+  it('does not navigate when paid post card is tapped', () => {
+    mockedUseFeedInfiniteQuery.mockReturnValue({
+      ...createBaseQueryState(),
+      posts: [
+        createPost({
+          id: 'post_paid',
+          tier: 'paid',
+          title: 'Платный пост',
+          preview: '',
+          body: '',
+        }),
+      ],
+    } as unknown as ReturnType<typeof useFeedInfiniteQuery>);
+
+    const { getByText } = render(<FeedList />);
+
+    fireEvent.press(getByText('Контент скрыт пользователем.'));
+
+    expect(mockedPush).not.toHaveBeenCalled();
   });
 });

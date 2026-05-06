@@ -20,4 +20,3 @@ export const getPosts = async ({
     tier,
     simulate_error: simulateError,
   });
-

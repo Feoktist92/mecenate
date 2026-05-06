@@ -48,4 +48,3 @@ describe('getPosts', () => {
     await expect(getPosts({ limit: 10 })).rejects.toThrow('Boom');
   });
 });
-
